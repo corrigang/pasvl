@@ -14,7 +14,7 @@ abstract class Validator
 
     protected function isNullable($data)
     {
-        return is_null($data) && $is_nullable;
+        return is_null($data) && $this->is_nullable;
     }
 
     public function nullable($data, bool $strict = true): bool

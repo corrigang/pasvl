@@ -98,7 +98,7 @@ class Traverser
         $dataKeyToPatternKeysMatch = [];
         foreach ($data as $dataKey => $dataValue) {
             // 1. Find perspective pattern keys
-            $perspectivePatternKeys = $this->findMatchedPatterns($dataKey, array_keys($patterns));
+            $perspectivePatternKeys = $this->findMatchedPatterns("$path.$dataKey", $dataKey, array_keys($patterns));
             if (!count($perspectivePatternKeys)) {
                 throw new DataNoMatching("$path.$dataKey", $dataKey, $dataValue, FailedReason::fromFailedKey());
             }

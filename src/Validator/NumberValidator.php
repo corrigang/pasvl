@@ -11,7 +11,8 @@ class NumberValidator extends Validator
 {
     public function __invoke($data, $nullable = false): bool
     {
-        parent::__invoke($data, $nullable);
+        $this->is_nullable = $nullable;
+
         return
             is_integer($data) ||
             is_float($data) ||

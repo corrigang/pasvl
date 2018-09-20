@@ -11,32 +11,48 @@ class StringValidator extends Validator
 {
     public function __invoke($data, $nullable = false): bool
     {
+        parent::__invoke($data, $nullable);
         return is_string($data) ||
             ($nullable && $data == null);;
     }
 
     public function len($data, int $length): bool
     {
+        if ($this->isNullable($data)) {
+            return true;
+        }
         return mb_strlen($data, 'utf-8') == $length;
     }
 
     public function length($data, int $length): bool
     {
+        if ($this->isNullable($data)) {
+            return true;
+        }
         return $this->len($data, $length);
     }
 
     public function min($data, int $length): bool
     {
+        if ($this->isNullable($data)) {
+            return true;
+        }
         return mb_strlen($data) >= $length;
     }
 
     public function max($data, int $length): bool
     {
+        if ($this->isNullable($data)) {
+            return true;
+        }
         return mb_strlen($data) <= $length;
     }
 
     public function contains($data, string $needle): bool
     {
+        if ($this->isNullable($data)) {
+            return true;
+        }
         return mb_strpos($data, $needle) !== false;
     }
 
@@ -48,53 +64,83 @@ class StringValidator extends Validator
      */
     public function regexp($data, ...$pattern): bool
     {
+        if ($this->isNullable($data)) {
+            return true;
+        }
         $merged_pattern = implode(",", $pattern);
         return preg_match($merged_pattern, $data);
     }
 
     public function regex($data, ...$pattern): bool
     {
+        if ($this->isNullable($data)) {
+            return true;
+        }
         return call_user_func_array([$this, "regexp"], array_merge([$data], $pattern));
     }
 
 
     public function starts($data, string $starts): bool
     {
+        if ($this->isNullable($data)) {
+            return true;
+        }
         return mb_strpos($data, $starts) === 0;
     }
 
     public function ends($data, string $ends): bool
     {
+        if ($this->isNullable($data)) {
+            return true;
+        }
         return mb_strrpos($data, $ends) === (strlen($data) - strlen($ends));
     }
 
     public function in($data, ...$options): bool
     {
+        if ($this->isNullable($data)) {
+            return true;
+        }
         return in_array($data, $options);
     }
 
     public function url($data): bool
     {
+        if ($this->isNullable($data)) {
+            return true;
+        }
         return filter_var($data, FILTER_VALIDATE_URL);
     }
 
     public function ip($data): bool
     {
+        if ($this->isNullable($data)) {
+            return true;
+        }
         return filter_var($data, FILTER_VALIDATE_IP);
     }
 
     public function email($data): bool
     {
+        if ($this->isNullable($data)) {
+            return true;
+        }
         return filter_var($data, FILTER_VALIDATE_EMAIL);
     }
 
     public function json($data): bool
     {
+        if ($this->isNullable($data)) {
+            return true;
+        }
         return @json_decode($data) !== null;
     }
 
     public function date($data): bool
     {
+        if ($this->isNullable($data)) {
+            return true;
+        }
         return strtotime($data) !== false;
     }
 }

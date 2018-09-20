@@ -10,6 +10,18 @@ namespace PASVL\Validator;
 abstract class Validator
 {
 
+    protected $is_nullable = false;
+
+    protected function isNullable($data)
+    {
+        return is_null($data) && $is_nullable;
+    }
+
+    public function __invoke($data, $nullable = false): bool
+    {
+        $this->is_nullable = $nullable;
+    }
+
     public function nullable($data, bool $strict = true): bool
     {
         return

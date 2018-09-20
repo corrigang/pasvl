@@ -11,6 +11,7 @@ class IntValidator extends NumberValidator
 {
     public function __invoke($data, $nullable = false): bool
     {
+        parent::__invoke($data, $nullable);
         return is_integer($data) ||
             ($nullable && $data == null);;
     }

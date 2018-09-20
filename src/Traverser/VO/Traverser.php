@@ -39,10 +39,10 @@ class Traverser
      * @param array $patterns
      * @param iterable $data
      */
-    public function match(array $patterns, iterable $data)
+    public function match($path, array $patterns, iterable $data)
     {
         try {
-            $this->matchLevel($data, $patterns);
+            $this->matchLevel($path, $data, $patterns);
         } catch (DataNoMatching $e) {
 
             $failed_pattern    = $patterns;
@@ -67,10 +67,10 @@ class Traverser
      * @param iterable $data
      * @return bool
      */
-    public function check(array $patterns, iterable $data): bool
+    public function check($path, array $patterns, iterable $data): bool
     {
         try {
-            $this->match($patterns, $data);
+            $this->match($path, $patterns, $data);
             return true;
         } catch (FailReport $e) {
             return false;
@@ -83,7 +83,7 @@ class Traverser
      * @return void
      * @throws \Exception
      */
-    protected function matchLevel(iterable $data, array $patterns)
+    protected function matchLevel($path, iterable $data, array $patterns)
     {
 
         // Optimization: analyze explicit keys first
@@ -100,12 +100,13 @@ class Traverser
             // 1. Find perspective pattern keys
             $perspectivePatternKeys = $this->findMatchedPatterns($dataKey, array_keys($patterns));
             if (!count($perspectivePatternKeys)) {
-                throw new DataNoMatching($dataKey, $dataValue, FailedReason::fromFailedKey());
+                throw new DataNoMatching("$path.$dataKey", $dataKey, $dataValue, FailedReason::fromFailedKey());
             }
 
 
             // 2. Filter perspective pattern keys by validating data value against pattern's corresponding value
             $perspectivePatternKeys = $this->filterPerspectiveKeysByMatchingValues(
+                $path,
                 $perspectivePatternKeys,
                 $patterns,
                 $dataValue
@@ -167,7 +168,7 @@ class Traverser
 
         if (array_sum($patternKeyFulfillmentMap) != count($patternKeyFulfillmentMap)) {
             // fulfillment was not met
-            throw new DataNoMatching("", "", FailedReason::fromFailedKeyQuantity());
+            throw new DataNoMatching($path, "", FailedReason::fromFailedKeyQuantity());
         }
     }
 
@@ -179,12 +180,12 @@ class Traverser
      * @return array
      * @throws \Exception
      */
-    protected function findMatchedPatterns($data, array $patterns): array
+    protected function findMatchedPatterns($path, $data, array $patterns): array
     {
         $matchedPatterns = [];
         foreach ($patterns as $pattern_key => $pattern) {
             echo("findMatchedPatterns: " . $pattern_key);
-            if ($this->validator->match($data, $pattern)) {
+            if ($this->validator->match("$path.$pattern_key", $data, $pattern)) {
                 $matchedPatterns[$pattern_key] = $pattern;
             }
         }
@@ -200,6 +201,7 @@ class Traverser
      * @param $dataValue
      */
     function filterPerspectiveKeysByMatchingValues(
+        $path,
         $perspectivePatternKeys,
         $patterns,
         $dataValue
@@ -222,7 +224,7 @@ class Traverser
 
                     // go down and analyze next array's level
                     try {
-                        $this->matchLevel($dataValue, $patternValue);
+                        $this->matchLevel($path, $dataValue, $patternValue);
                         $patternMatched = true;
                     } catch (DataNoMatching $e) {
                         // This means that this pattern cannot be matched against given value,
@@ -234,7 +236,7 @@ class Traverser
             } else {
 
                 // the pattern is not an array and value is also not an array, validate one against another
-                $matched_patterns = $this->findMatchedPatterns($dataValue, [$patterns[$patternKey]]);
+                $matched_patterns = $this->findMatchedPatterns($path, $dataValue, [$patterns[$patternKey]]);
 
                 // value matched pattern
                 $patternMatched = (bool)count($matched_patterns);

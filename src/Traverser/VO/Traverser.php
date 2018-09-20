@@ -22,6 +22,7 @@ class Traverser
 
     /** @var PatternValidator */
     private $validator;
+    private $errors = [];
 
     /**
      * Traverser constructor.
@@ -106,7 +107,7 @@ class Traverser
 
             // 2. Filter perspective pattern keys by validating data value against pattern's corresponding value
             $perspectivePatternKeys = $this->filterPerspectiveKeysByMatchingValues(
-                $path,
+                $path.$dataKey,
                 $perspectivePatternKeys,
                 $patterns,
                 $dataValue
@@ -115,7 +116,7 @@ class Traverser
 
             if (!count($perspectivePatternKeys)) {
                 throw new DataNoMatching(
-                    $dataKey,
+                    "$path.$dataKey",
                     $dataValue,
                     FailedReason::fromFailedValue()
                 );
@@ -184,8 +185,7 @@ class Traverser
     {
         $matchedPatterns = [];
         foreach ($patterns as $pattern_key => $pattern) {
-            echo("findMatchedPatterns: " . $pattern_key);
-            if ($this->validator->match("$path.$pattern_key", $data, $pattern)) {
+            if ($this->validator->match($data, $pattern)) {
                 $matchedPatterns[$pattern_key] = $pattern;
             }
         }
@@ -207,7 +207,7 @@ class Traverser
         $dataValue
     ): array {
 
-        return array_filter($perspectivePatternKeys, function ($patternKey) use ($dataValue, $patterns) {
+        return array_filter($perspectivePatternKeys, function ($patternKey) use ($path, $dataValue, $patterns) {
 
             $patternMatched = false;
             $patternValue   = $patterns[$patternKey]; // this is just a link, should not be too heavy on memory
@@ -230,7 +230,6 @@ class Traverser
                         // This means that this pattern cannot be matched against given value,
                         // this exception should not bubble up, it just means that pattern did not match
                     }
-
                 }
 
             } else {
@@ -241,6 +240,9 @@ class Traverser
                 // value matched pattern
                 $patternMatched = (bool)count($matched_patterns);
 
+                if (!$patternMatched) {
+                    $this->errors[] = "Did not match [$path]";
+                }
             }
 
             return $patternMatched;
